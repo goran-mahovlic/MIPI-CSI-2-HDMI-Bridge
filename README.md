@@ -1,4 +1,4 @@
-MIPI-CSI-2-HDMI-Bridge
+# Heading level 1 **MIPI-CSI-2-HDMI-Bridge**
 
 This repository contains the schematic and layout for a prototype evaluation board for the Cologne Chip Gatemate FPGA and the Verilog source of a MIPI-CSI-2-HDMI-bridge.
 The evaluation board is designed to enable the use of a Raspberry Pi Camera V2 for receiving and an HDMI port for transmitting video data, however it may be useful to make some adjustments to the design.
