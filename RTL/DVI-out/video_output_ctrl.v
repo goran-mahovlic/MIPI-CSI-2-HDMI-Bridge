@@ -14,9 +14,11 @@ module video_output_ctrl (
 	output clk_pix_out,
 	output pixel_request,
 	output TMDS_clk,
-	output[2:0] TMDS_data
+	output[2:0] TMDS_data,
+	output hsync_s, vsync_s, de_s, 
+	output [8:0] qm_r, qm_g, qm_b
 );	
-	
+
     wire[8:0] r_qm, g_qm, b_qm;
     wire de_s, hsync_s, vsync_s;
     wire rst;
@@ -66,7 +68,7 @@ module video_output_ctrl (
 	/* PLL: 25MHz (pix clock) and 125MHz (hdmi clk rate) */
 	wire clk_pix, clk_dvi, lock;
 	pll pll_inst (
-		.clock_in(clk_ref),       //  50 MHz reference
+		.clock_in(clk_ref),       //  25 MHz reference
 		.clock_out(clk_pix),    //  25 MHz, 0 deg
 		.clock_5x_out(clk_dvi), // 125 MHz, 0 deg
 		.lock_out(lock)

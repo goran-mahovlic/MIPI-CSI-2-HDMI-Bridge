@@ -5,7 +5,7 @@ module csi_top #(
     parameter NUM_RAW = 8
 )(
     input  clk_ext,
-
+    //input rst_i,
     // CSI-2 RX Interface
     input  DPHY_CK_HS_N, DPHY_CK_HS_P,
     //input  DPHY_CK_LP_N, DPHY_CK_LP_P,
@@ -13,7 +13,7 @@ module csi_top #(
     //input  DPHY_D0_LP_N, DPHY_D0_LP_P,
     input  DPHY_D1_HS_N, DPHY_D1_HS_P,
     //input  DPHY_D1_LP_N, DPHY_D1_LP_P,
-    inout  DPHY_CCI_SCL, DPHY_CCI_SDA,
+    inout  DPHY_CCI_SCL, DPHY_CCI_SDA, DPHY_CCI_SCL0, DPHY_CCI_SDA0,
 
     // TMDS Video Interface
     output TMDS_CK_P, TMDS_CK_N,
@@ -22,17 +22,24 @@ module csi_top #(
     output TMDS_D2_P, TMDS_D2_N,
     
     // Pmod
-    output [7:0] PMODA,
-    output [7:0] PMODB,
-    output [7:0] PMODC,
-    output [7:0] PMODD
+    //output [7:0] PMODA,
+    //output [7:0] PMODB,
+    //output [7:0] PMODC,
+    output [7:0] PMODD,
+    output vga_hsync, vga_vsync, 
+    output [3:0] vga_r, vga_g, vga_b
 );
     wire f0, f1;
 	
-    assign PMODA = {6'b0, f1, f0, 1'b0, csi_byte_clk};
-    assign PMODB = csi_checksum_good[7:0];
-    assign PMODC = {5'b0, checksum_err_seen ,i2c_done, csi_raw_valid};
-    assign PMODD = csi_checksum_err[7:0];
+    //assign PMODA = {6'b0, f1, f0, 1'b0, csi_byte_clk};
+    //assign PMODB = csi_checksum_good[7:0];
+	assign PMODD = { csi_checksum_good[0], csi_checksum_err[0], pix_clk_counter[21], 1'b0, csi_byte_clk, checksum_err_seen ,i2c_done, csi_raw_valid };
+    //assign PMODD = csi_checksum_err[7:0];
+
+reg [31:0] pix_clk_counter;
+always @(posedge pix_clk) begin
+    pix_clk_counter <= pix_clk_counter + 1;
+end
 
     wire rst_ref_n, rst_csi;
 	assign rst_csi = ~rst_ref_n;
@@ -42,8 +49,8 @@ module csi_top #(
       .rst_ref_n (rst_ref_n)
     );
 
-	wire init_done;
-	wire init_error;
+	wire init_done, init_done0;
+	wire init_error, init_error0 ;
     wire i2c_done;	//this is used as an enable for the csi rx
 	wire i2c_error;
 	
@@ -58,6 +65,16 @@ module csi_top #(
 	.init_done(init_done),
 	.init_error(init_error)
 );
+
+	CCI_Handler CCI0 (
+	.clk(clk_ext),	
+	.RST_N(rst_ref_n),
+	.I2C_SCL(DPHY_CCI_SCL0),
+	.I2C_SDA(DPHY_CCI_SDA0),
+	.init_done(init_done0),
+	.init_error(init_error0)
+);
+
 
     wire csi_byte_clk;
     wire csi_raw_valid;
@@ -117,17 +134,33 @@ RAM_buffer test_buffer (
 	.data_out(rgb_pix)
 );	
 
+//wire VGA_DE;
+wire [8:0] VGA_R_9;
+wire [8:0] VGA_G_9;
+wire [8:0] VGA_B_9;
+
+//assign vga_r[3:0] = VGA_R_9[3:0];
+//assign vga_g[3:0] = VGA_G_9[3:0];
+//assign vga_b[3:0] = VGA_B_9[6:3];
+
 video_output_ctrl DVI_OUT(
 	.clk_ref (clk_ext),
 	.RST_N(rst_ref_n),
 	.RGB_data_in(rgb_pix),
 	.RGB_in_valid(rgb_valid),
-	
 	.clk_pix_out(pix_clk),
 	.pixel_request(pixel_request),
 	.TMDS_clk(TMDS_clk),
-	.TMDS_data(TMDS_data)
+	.TMDS_data(TMDS_data),
+	.hsync_s(vga_hsync),
+	.vsync_s(vga_vsync),
+	//.de_s(VGA_DE),
+	.qm_r(vga_r),
+	.qm_g(vga_g),
+	.qm_b(vga_b)
 );
+
+
   //Output buffers for DVI out
   CC_LVDS_OBUF #(
 		.LVDS_BOOST(1),
