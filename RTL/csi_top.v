@@ -134,14 +134,7 @@ RAM_buffer test_buffer (
 	.data_out(rgb_pix)
 );	
 
-//wire VGA_DE;
-wire [8:0] VGA_R_9;
-wire [8:0] VGA_G_9;
-wire [8:0] VGA_B_9;
-
-//assign vga_r[3:0] = VGA_R_9[3:0];
-//assign vga_g[3:0] = VGA_G_9[3:0];
-//assign vga_b[3:0] = VGA_B_9[6:3];
+// Added VGA out
 
 video_output_ctrl DVI_OUT(
 	.clk_ref (clk_ext),
